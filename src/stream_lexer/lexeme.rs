@@ -1,7 +1,7 @@
 use std;
 
 ///Lexeme
-#[derive(PartialEq, PartialOrd, Clone)]
+#[derive(PartialEq, PartialOrd, Clone, Debug)]
 pub enum Lexeme<'a>{
     EOF,
     Ident(&'a str),

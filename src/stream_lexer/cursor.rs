@@ -17,10 +17,12 @@ pub struct Cursor<'a>{
     cur_char:char,
     cur_line_number:usize,
     cur_line_pos:usize,//position of line begining in bytes
+    cur_column:usize,//position of char from beginning of line
 
     //lexeme description
     pub line_number:usize, //number of line
     pub line_pos:usize, //position of line
+    pub column:usize,
     pub pos:usize, //position of lexeme in bytes
     pub lex:Lexeme<'a>,
 }
@@ -36,9 +38,11 @@ impl<'a>Cursor<'a>{
             cur_char:'\0',
             cur_line_number:1,
             cur_line_pos:0,
+            cur_column:0,
 
             line_number:0,
             line_pos:0,
+            column:0,
             pos:0,
             lex:Lexeme::EOF,
         };
@@ -82,14 +86,9 @@ impl<'a>Cursor<'a>{
 
         let line_char_pos=self.cur_pos-self.cur_line_pos;
 
-        let mut column=0;
         let mut line_end=None;
 
-        for (col,(i,c)) in bc.char_indices().enumerate() {
-            if i==line_char_pos{
-                column=col;
-            }
-
+        for (i,c) in bc.char_indices() {
             if c=='\n' {
                 line_end=Some(i);
                 break;
@@ -104,7 +103,7 @@ impl<'a>Cursor<'a>{
             None => bc,
         };
 
-        Line::new(self.line_number, column, line)
+        Line::new(self.line_number, self.column, line)
     }
 
     //Return fragment of text between start and end
@@ -118,11 +117,13 @@ impl<'a>Cursor<'a>{
         match self.cur_it.next(){
             None => {
                 if self.lex!=Lexeme::EOF {
+                    self.cur_column+=1;
                     self.cur_pos+=1;//size of '\0' is 1 byte
                     self.cur_char='\0';
                 }
             },
             Some( (pos, ch) ) => {
+                self.cur_column+=1;
                 self.cur_pos=pos;
                 self.cur_char=ch;
             },
@@ -144,6 +145,7 @@ impl<'a>Cursor<'a>{
                     '\n' => {
                         self.cur_line_pos=self.cur_pos+1;
                         self.cur_line_number+=1;
+                        self.cur_column=0;
                     },
                     ' ' | '\t' | '\r' => {},
                     _ => break,//non space symbal has been found
@@ -156,6 +158,7 @@ impl<'a>Cursor<'a>{
             self.line_pos=self.cur_line_pos;
             self.line_number=self.cur_line_number;
             self.pos=self.cur_pos;
+            self.column=self.cur_column;
 
             if self.cur_char.is_digit(10) {
 
@@ -222,6 +225,7 @@ impl<'a>Cursor<'a>{
                                         '\n'=>{
                                             self.cur_line_pos=self.cur_pos+1;
                                             self.cur_line_number+=1;
+                                            self.cur_column=0;
                                             break;
                                         }
                                         _=>{},
@@ -238,6 +242,7 @@ impl<'a>Cursor<'a>{
                                         '\n'=>{
                                             self.cur_line_pos=self.cur_pos+1;
                                             self.cur_line_number+=1;
+                                            self.cur_column=0;
                                         },
                                         '/'=>{
                                             if self.next_char()=='*' {
