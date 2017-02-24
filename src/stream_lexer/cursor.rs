@@ -207,7 +207,7 @@ impl<'a>Cursor<'a>{
                     },
                 }
             }else if self.cur_char.is_alphabetic() || self.cur_char=='_'{
-                while self.next_char().is_alphabetic() || self.cur_char=='_' {}
+                while self.next_char().is_alphabetic() || self.cur_char.is_digit(10) || self.cur_char=='_' {}
 
                 self.lex=Lexeme::Ident(self.get_part(self.pos,self.cur_pos));
                 return Ok( self.lex.clone() );
