@@ -116,7 +116,7 @@ impl<'a>Cursor<'a>{
     fn next_char(&mut self) -> char{
         match self.cur_it.next(){
             None => {
-                if self.lex!=Lexeme::EOF {
+                if self.cur_char!='\0' {
                     self.cur_column+=1;
                     self.cur_pos+=1;//size of '\0' is 1 byte
                     self.cur_char='\0';
